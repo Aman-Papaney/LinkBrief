@@ -40,6 +40,6 @@ A mini full-stack React app that lets users save web links and automatically fet
 
 ## Images
 
-![Auth Page](./assets/LinkBrief2.png)
+![Auth Page](https://github.com/Aman-Papaney/LinkBrief/blob/main/assets/LinkBrief1.PNG)
 ![Homepage](./assets/LinkBrief1.png)
 
