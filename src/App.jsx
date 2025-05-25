@@ -10,6 +10,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Fetch bookmarks from Firestore
   useEffect(() => {
@@ -70,10 +71,22 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={darkMode ? "min-h-screen bg-gray-900 text-gray-100" : "min-h-screen bg-gray-100"}>
       <div className="max-w-2xl mx-auto p-4">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setDarkMode((d) => !d)}
+            className={
+              darkMode
+                ? "px-3 py-1 rounded bg-gray-700 text-gray-100 hover:bg-gray-600"
+                : "px-3 py-1 rounded bg-gray-200 text-gray-800 hover:bg-gray-300"
+            }
+          >
+            {darkMode ? "Light Mode" : "Dark Mode"}
+          </button>
+        </div>
         {!user ? (
-          <AuthForm onAuth={handleAuth} />
+          <AuthForm onAuth={handleAuth} darkMode={darkMode} />
         ) : (
           <>
             <div className="flex justify-between items-center mb-6">
