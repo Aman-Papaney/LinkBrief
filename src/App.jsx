@@ -10,14 +10,14 @@ const DUMMY_BOOKMARKS = [
     title: "React – A JavaScript library for building user interfaces",
     favicon: "https://www.google.com/s2/favicons?domain_url=https://react.dev",
     summary: "React makes it painless to create interactive UIs. Design simple views for each state in your application.",
-    timestamp: new Date().toISOString(),
+    timestamp: "2024-05-01T10:30:00.000Z", // Example fixed timestamp
   },
   {
     url: "https://firebase.google.com",
     title: "Firebase",
     favicon: "https://www.google.com/s2/favicons?domain_url=https://firebase.google.com",
     summary: "Firebase helps you build and run successful apps. Backed by Google and loved by app development teams.",
-    timestamp: new Date().toISOString(),
+    timestamp: "2024-05-02T15:45:00.000Z", // Example fixed timestamp
   },
 ];
 
@@ -30,7 +30,13 @@ function App() {
   };
 
   const handleAddBookmark = (bm) => {
-    setBookmarks([bm, ...bookmarks]);
+    setBookmarks([
+      {
+        ...bm,
+        timestamp: new Date().toISOString(), // Set timestamp when bookmark is added
+      },
+      ...bookmarks,
+    ]);
   };
 
   const handleDeleteBookmark = (idx) => {
