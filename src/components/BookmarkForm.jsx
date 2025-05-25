@@ -1,6 +1,21 @@
 import React, { useState } from "react";
 import { fetchJinaSummary } from "../utils/fetchJinaSummary";
 
+function parseSummary(rawSummary) {
+  if (!rawSummary) return { title: "", summary: "" };
+  const lines = rawSummary.split("\n");
+  // Title
+  let title = "";
+  const titleMatch = lines[0]?.match(/^Title\s*:\s*(.+)$/i);
+  if (titleMatch) title = titleMatch[1].trim();
+  // Main summary (skip first two lines)
+  let summaryText = lines.slice(2).join(" ").replace(/\s+/g, " ").trim();
+  // Limit to 100 words
+  const words = summaryText.split(" ");
+  if (words.length > 100) summaryText = words.slice(0, 100).join(" ") + "...";
+  return { title, summary: summaryText};
+}
+
 const BookmarkForm = ({ onAdd }) => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -11,19 +26,20 @@ const BookmarkForm = ({ onAdd }) => {
     setLoading(true);
     setError("");
     try {
-      const summary = await fetchJinaSummary(url);
-      let title = url;
-      if (summary) {
-        const firstLine = summary.split("\n")[0];
-        const match = firstLine.match(/^Title\s*:\s*(.+)$/i);
-        if (match) {
-          title = match[1].trim();
-        }
-      }
+      const rawSummary = await fetchJinaSummary(url);
+      const parsed = parseSummary(rawSummary);
       const favicon = `https://www.google.com/s2/favicons?domain_url=${url}`;
-      onAdd({ url, title, favicon, summary });
+      onAdd({
+        url,
+        title: parsed.title || url,
+        favicon,
+        summary: parsed.summary, // Only pass summaryText to the summary field
+        // urlSource, images, links are parsed but not passed to the bookmark object
+      });
       setUrl("");
     } catch (err) {
+      console.log(err);
+      
       setError("Failed to fetch summary.");
     } finally {
       setLoading(false);

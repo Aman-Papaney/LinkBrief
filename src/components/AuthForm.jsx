@@ -16,7 +16,7 @@ const AuthForm = ({ onAuth }) => {
       } else {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
-      onAuth(userCredential.user.email);
+      onAuth(userCredential.user);
     } catch (err) {
       alert(err.message);
     }

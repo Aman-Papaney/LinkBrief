@@ -1,10 +1,6 @@
 import axios from "axios";
 
-/**
- * Fetches a text summary for a given URL using the Jina AI summarization API.
- * @param {string} url - The raw URL to summarize.
- * @returns {Promise<string>} - The summary text or a fallback message on error.
- */
+
 export async function fetchJinaSummary(url) {
   if (!url) return "No URL provided.";
   const apiUrl = `https://r.jina.ai/${encodeURIComponent(url)}`;

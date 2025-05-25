@@ -1,46 +1,72 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AuthForm from "./components/AuthForm";
 import BookmarkForm from "./components/BookmarkForm";
 import BookmarkList from "./components/BookmarkList";
 import './App.css'
-
-const DUMMY_BOOKMARKS = [
-  {
-    url: "https://react.dev",
-    title: "React – A JavaScript library for building user interfaces",
-    favicon: "https://www.google.com/s2/favicons?domain_url=https://react.dev",
-    summary: "React makes it painless to create interactive UIs. Design simple views for each state in your application.",
-    timestamp: "2024-05-01T10:30:00.000Z", // Example fixed timestamp
-  },
-  {
-    url: "https://firebase.google.com",
-    title: "Firebase",
-    favicon: "https://www.google.com/s2/favicons?domain_url=https://firebase.google.com",
-    summary: "Firebase helps you build and run successful apps. Backed by Google and loved by app development teams.",
-    timestamp: "2024-05-02T15:45:00.000Z", // Example fixed timestamp
-  },
-];
+import {collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, deleteDoc, doc} from "firebase/firestore"
+import { db } from "./firebase";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [bookmarks, setBookmarks] = useState(DUMMY_BOOKMARKS);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleAuth = (email) => {
-    setUser({ email });
+  // Fetch bookmarks from Firestore
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const q = query(
+          collection(db, "bookmarks"),
+          where("uid", "==", user.uid),
+          orderBy("timestamp", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setBookmarks(docs);
+        
+      } catch (err) {
+        setBookmarks([]);
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookmarks();
+  }, [user]);
+
+  const handleAuth = (userObj) => {
+    
+    setUser(userObj);
   };
 
-  const handleAddBookmark = (bm) => {
-    setBookmarks([
-      {
-        ...bm,
-        timestamp: new Date().toISOString(), // Set timestamp when bookmark is added
-      },
-      ...bookmarks,
-    ]);
+  const handleAddBookmark = async (bm) => {
+    if (!user) return;
+    const bookmarkData = {
+      ...bm,
+      uid: user.uid,
+      timestamp: new Date().toISOString(),
+    };
+    setBookmarks([bookmarkData, ...bookmarks]); // Optimistic update
+    try {
+      await addDoc(collection(db, "bookmarks"), {...bookmarkData,createdAt: serverTimestamp()});
+      
+    } catch (err) {
+      console.error("Failed to save bookmark:", err)
+    }
   };
 
-  const handleDeleteBookmark = (idx) => {
-    setBookmarks(bookmarks.filter((_, i) => i !== idx));
+  const handleDeleteBookmark = async (idx) => {
+    const bookmark = bookmarks[idx];
+    setBookmarks(bookmarks.filter((_, i) => i !== idx)); // Optimistic update
+    if (bookmark.id) {
+      try {
+        await deleteDoc(doc(db, "bookmarks", bookmark.id));
+      } catch (err) {
+        // Optionally handle error (e.g., show a toast)
+      }
+    }
   };
 
   return (
@@ -55,7 +81,11 @@ function App() {
               <button onClick={() => setUser(null)} className="text-blue-600 hover:underline">Logout</button>
             </div>
             <BookmarkForm onAdd={handleAddBookmark} />
-            <BookmarkList bookmarks={bookmarks} onDelete={handleDeleteBookmark} />
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Loading bookmarks...</div>
+            ) : (
+              <BookmarkList bookmarks={bookmarks} onDelete={handleDeleteBookmark} />
+            )}
           </>
         )}
       </div>
